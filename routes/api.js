@@ -74,7 +74,7 @@ router.post('/getCourseByTitle', function(req, res, next) {
       console.log('getCourseByTitle ERR');
       return;
     }
-    let temp = (param.cPage - 1) * param.pSize;
+    var temp = (param.cPage - 1) * param.pSize;
     connection.query(userSQL.getCourseByTitle, [param.title, parseInt(temp), parseInt(param.pSize)], function(err, result) {
       if (result) {     
         responseJSON(res, result);
@@ -87,7 +87,7 @@ router.post('/getCourseByTitle', function(req, res, next) {
 router.get('/getCourseByCourseClassID', function(req, res, next) {
   pool.getConnection(function(err, connection) {
     var param = req.query || req.params;
-    let temp = (param.cPage - 1) * param.pSize;
+    var temp = (param.cPage - 1) * param.pSize;
     connection.query(userSQL.getCourseByTypeID, [param.ccID, parseInt(temp), parseInt(param.pSize)], function(err, result) {
       if (result) {     
         responseJSON(res, result);
@@ -112,7 +112,7 @@ router.get('/getCourseByCourseID', function(req, res, next) {
 router.get('/getSourceByCourseID', function(req, res, next) {
   pool.getConnection(function(err, connection) {
     var param = req.query || req.params;
-    let temp = (param.cPage - 1) * param.pSize;
+    var temp = (param.cPage - 1) * param.pSize;
     connection.query(userSQL.getSourceByCourseID, [param.cID, parseInt(temp), parseInt(param.pSize)], function(err, result) {
       if (result) {     
         responseJSON(res, result);
