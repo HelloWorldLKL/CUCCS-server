@@ -3,7 +3,7 @@ var router = express.Router();
 // 导入MySQL模块
 var mysql = require('mysql');
 var dbConfig = require('../db/DBConfig.js');
-var userSQL = require('../db/Usersql.js');
+var userSQL = require('../db/userSQL.js');
 // 使用DBConfig.js的配置信息创建一个MySQL连接池
 var pool = mysql.createPool(dbConfig.mysql);
 // 响应一个JSON数据
