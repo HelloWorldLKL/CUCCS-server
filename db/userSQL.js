@@ -1,6 +1,6 @@
 var UserSQL = {
   getCourseType: 'SELECT * FROM t_courseclass WHERE ccDel = 0',
-  getCarouselInfo: 'SELECT * FROM t_carousel WHERE caDel = 0',
+  getCarouselInfo: 'SELECT * FROM t_carousel',
   getRecommendCourse: 'SELECT t_course.cID ID, cName title, cCover cover, cInfo info, v_coursesourcecount.sectionCount FROM t_course, v_coursesourcecount WHERE t_course.cID = v_coursesourcecount.cID AND cShowFlag = 1',
   getUndelCourse: 'SELECT t_course.cID ID, cName title, cCover cover, cInfo info, v_coursesourcecount.sectionCount FROM t_course, v_coursesourcecount WHERE t_course.cID = v_coursesourcecount.cID',
   getCourseByTitle: 'SELECT t_course.cID ID, cName title, cCover cover, cInfo info, v_coursesourcecount.sectionCount FROM t_course, v_coursesourcecount WHERE t_course.cID = v_coursesourcecount.cID AND cName LIKE concat("%", ?, "%") LIMIT ?, ?',
