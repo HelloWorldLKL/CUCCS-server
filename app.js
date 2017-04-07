@@ -7,7 +7,7 @@ var path = require('path');
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-var api = require('./routes/api');
+var api = require('./routes/api.js');
 var index = require('./routes/index.js');
 
 
