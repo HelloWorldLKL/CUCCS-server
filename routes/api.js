@@ -75,6 +75,7 @@ router.get('/course', function(req, res, next) {
         msg: '操作失败'
       });
     }
+    console.log(`sql:\n${sql}\narr:\n${arr}\n`);
     connection.query(sql, arr, function(err, result) {
       if (result) {
         if(objFlag) {
