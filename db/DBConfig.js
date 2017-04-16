@@ -3,7 +3,7 @@ module.exports = {
     host: '127.0.0.1',
     user: 'root',
     password: '8767491969',
-    database: 'CUCCS',
+    database: 'test',
     port: 3306
   }
 };
