@@ -17,23 +17,11 @@ var responseJSON = function(res, ret) {
     res.json(ret);
   }
 };
-// 获取课程类型
-router.get('/type', function(req, res, next) {
-  pool.getConnection(function(err, connection) {
-    var param = req.query || req.params;
-    connection.query(userSQL.getCourseType, function(err, result) {
-      if (result) {     
-        responseJSON(res, result);
-      }
-      connection.release();
-    });
-  });
-});
 // 获取图片轮播信息
 router.get('/carousel', function(req, res, next) {
   pool.getConnection(function(err, connection) {
     var param = req.query || req.params;
-    connection.query(userSQL.getCarouselInfo, function(err, result) {
+    connection.query(userSQL.getCarousel, function(err, result) {
       if (result) {     
         responseJSON(res, result);
       }
@@ -41,11 +29,17 @@ router.get('/carousel', function(req, res, next) {
     });
   });
 });
-// 获取推荐课程
-router.get('/recommendCourse', function(req, res, next) {
+// 获取课程类型信息
+router.get('/courseType', function(req, res, next) {
   pool.getConnection(function(err, connection) {
     var param = req.query || req.params;
-    connection.query(userSQL.getRecommendCourse, function(err, result) {
+    var sql;
+    if(param.all == 0) {
+      sql = userSQL.getCourseType;
+    } else {
+      sql = userSQL.getAllCourseType;
+    }
+    connection.query(sql, function(err, result) {
       if (result) {     
         responseJSON(res, result);
       }
@@ -53,27 +47,50 @@ router.get('/recommendCourse', function(req, res, next) {
     });
   });
 });
-// 得到所有未被删除的课程
-router.get('/undelCourse', function(req, res, next) {
+// 获取课程信息
+router.get('/course', function(req, res, next) {
   pool.getConnection(function(err, connection) {
     var param = req.query || req.params;
-    connection.query(userSQL.getUndelCourse, function(err, result) {
-      if (result) {     
-        responseJSON(res, result);
+    var sql, arr, objFlag;
+    if(param.recommend) {
+      // 获取推荐课程信息
+      sql = userSQL.getRecommendCourse;
+    } else if(param.all) {
+      // 获取所有课程
+      sql = userSQL.getCourse;
+    } else if(param.cPage && param.pSize && param.ccID) {
+      // 通过类型ID搜索课程信息
+      var temp = (param.cPage - 1) * param.pSize;
+      sql = userSQL.getCourseByTypeID;
+      arr = [param.ccID, parseInt(temp), parseInt(param.pSize)];
+    } else if(param.cID) {
+      // 通过课程ID搜索课程信息
+      var temp = (param.cPage - 1) * param.pSize;
+      sql = userSQL.getCourseByCourseID;
+      arr = [param.cID];
+      objFlag = true
+    } else {
+      res.json({
+        code: '-200',
+        msg: '操作失败'
+      });
+    }
+    connection.query(sql, arr, function(err, result) {
+      if (result) {
+        if(objFlag) {
+          responseJSON(res, result[0]);
+        } else {
+          responseJSON(res, result);
+        }
       }
       connection.release();
     });
   });
 });
 // 通过名字搜索课程
-router.post('/getCourseByTitle', function(req, res, next) {
+router.post('/course', function(req, res, next) {
   pool.getConnection(function(err, connection) {
     var param = req.body;
-    console.log(param);
-    if (param.title == undefined) {
-      console.log('getCourseByTitle ERR');
-      return;
-    }
     var temp = (param.cPage - 1) * param.pSize;
     connection.query(userSQL.getCourseByTitle, [param.title, parseInt(temp), parseInt(param.pSize)], function(err, result) {
       if (result) {     
@@ -83,86 +100,69 @@ router.post('/getCourseByTitle', function(req, res, next) {
     });
   });
 });
-// 通过类型ID搜索课程
-router.get('/getCourseByCourseClassID', function(req, res, next) {
+
+
+// 获取课程信息
+router.get('/section', function(req, res, next) {
   pool.getConnection(function(err, connection) {
     var param = req.query || req.params;
-    var temp = (param.cPage - 1) * param.pSize;
-    connection.query(userSQL.getCourseByTypeID, [param.ccID, parseInt(temp), parseInt(param.pSize)], function(err, result) {
-      if (result) {     
-        responseJSON(res, result);
+    var sql, arr, objFlag;
+    if(param.cPage && param.pSize && param.cID) {
+      // 通过课程ID搜索案例
+      sql = userSQL.getSourceByCourseID;
+      var temp = (param.cPage - 1) * param.pSize;
+      arr = [param.cID, parseInt(temp), parseInt(param.pSize)];
+    } else if(param.sID) {
+      // 通过案例ID搜索案例
+      sql = userSQL.getSectionBySectionID;
+      arr = [param.sID];
+      objFlag = true
+    } else {
+      res.json({
+        code: '-200',
+        msg: '操作失败'
+      });
+    }
+    connection.query(sql, arr, function(err, result) {
+      if (result) {
+        if(objFlag) {
+          responseJSON(res, result[0]);
+        } else {
+          responseJSON(res, result);
+        }
       }
       connection.release();
     });
   });
 });
-// 通过课程ID搜索课程
-router.get('/getCourseByCourseID', function(req, res, next) {
+
+router.get('/count', function(req, res, next) {
   pool.getConnection(function(err, connection) {
     var param = req.query || req.params;
-    connection.query(userSQL.getCourseByCourseID, [param.cID], function(err, result) {
-      if (result) {     
+    var sql, arr;
+    if(param.by === 'ccID' && param.get === 'course' && param.ccID) {
+      // 通过类型ID搜索课程数量
+      sql = 'SELECT count(*) courseCount FROM t_course where ccID = ?';
+      arr = [param.ccID];
+    } else if(param.by === 'title' && param.get === 'course' && param.title) {
+      // 通过课程标题搜索课程数量
+      sql = 'SELECT count(*) courseCount FROM t_course where cName LIKE concat(\'%\', ?, \'%\')';
+      arr = [param.title];
+    } else if(param.by === 'cID' && param.get === 'section' && param.cID) {
+      // 通过课程ID搜索案例数量
+      sql = 'SELECT count(*) sectionCount FROM t_section where cID = ?';
+      arr = [param.cID];
+    } else {
+      res.json({
+        code: '-200',
+        msg: '操作失败'
+      });
+    }
+    connection.query(sql, arr, function(err, result) {
+      if (result) {
         responseJSON(res, result[0]);
       }
       connection.release();
-    });
-  });
-});
-// 通过课程ID搜索案例
-router.get('/getSourceByCourseID', function(req, res, next) {
-  pool.getConnection(function(err, connection) {
-    var param = req.query || req.params;
-    var temp = (param.cPage - 1) * param.pSize;
-    connection.query(userSQL.getSourceByCourseID, [param.cID, parseInt(temp), parseInt(param.pSize)], function(err, result) {
-      if (result) {     
-        responseJSON(res, result);
-      }
-      connection.release();
-    });
-  });
-});
-// 通过案例ID搜索案例
-router.get('/getSectionBySectionID', function(req, res, next) {
-  pool.getConnection(function(err, connection) {
-    var param = req.query || req.params;
-    connection.query(userSQL.getSectionBySectionID, [param.sID], function(err, result) {
-      if (result) {     
-        responseJSON(res, result[0]);
-      }
-      connection.release();
-    });
-  });
-});
-// 通过类型ID搜索课程数量
-router.get('/getCourseTotalCount', function(req, res, next) {
-  pool.getConnection(function(err, connection) {
-    var param = req.query || req.params;
-    connection.query('SELECT count(*) courseCount FROM t_course where ccID = ?', [param.ccID], function(err, result) {
-      if (result) {     
-        responseJSON(res, result[0]);
-      }
-    });
-  });
-});
-// 通过课程标题搜索课程数量
-router.get('/getCourseTotalCountByTitle', function(req, res, next) {
-  pool.getConnection(function(err, connection) {
-    var param = req.query || req.params;
-    connection.query('SELECT count(*) courseCount FROM t_course where cName LIKE concat(\'%\', ?, \'%\')', [param.title], function(err, result) {
-      if (result) {     
-        responseJSON(res, result[0]);
-      }
-    });
-  });
-});
-// 通过类型ID搜索案例数量
-router.get('/getSectionTotalCount', function(req, res, next) {
-  pool.getConnection(function(err, connection) {
-    var param = req.query || req.params;
-    connection.query('SELECT count(*) sectionCount FROM t_source where cID = ?', [param.cID], function(err, result) {
-      if (result) {     
-        responseJSON(res, result[0]);
-      }
     });
   });
 });
